@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# apply-patches.sh - Apply all patches for OpenClaw on Termux
+# apply-patches.sh - Apply all patches for OpenClaw on Termux (glibc architecture)
 set -euo pipefail
 
 GREEN='\033[0;32m'
@@ -19,14 +19,14 @@ mkdir -p "$PATCH_DEST"
 # Start logging
 echo "Patch application started: $(date)" > "$LOG_FILE"
 
-# 1. Copy bionic-compat.js
-if [ -f "$SCRIPT_DIR/bionic-compat.js" ]; then
-    cp "$SCRIPT_DIR/bionic-compat.js" "$PATCH_DEST/bionic-compat.js"
-    echo -e "${GREEN}[OK]${NC}   Copied bionic-compat.js to $PATCH_DEST/"
-    echo "  Copied bionic-compat.js" >> "$LOG_FILE"
+# 1. Copy glibc-compat.js (replaces bionic-compat.js in glibc architecture)
+if [ -f "$SCRIPT_DIR/glibc-compat.js" ]; then
+    cp "$SCRIPT_DIR/glibc-compat.js" "$PATCH_DEST/glibc-compat.js"
+    echo -e "${GREEN}[OK]${NC}   Copied glibc-compat.js to $PATCH_DEST/"
+    echo "  Copied glibc-compat.js" >> "$LOG_FILE"
 else
-    echo -e "${RED}[FAIL]${NC} bionic-compat.js not found in $SCRIPT_DIR"
-    echo "  FAILED: bionic-compat.js not found" >> "$LOG_FILE"
+    echo -e "${RED}[FAIL]${NC} glibc-compat.js not found in $SCRIPT_DIR"
+    echo "  FAILED: glibc-compat.js not found" >> "$LOG_FILE"
     exit 1
 fi
 

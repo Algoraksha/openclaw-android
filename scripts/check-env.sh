@@ -34,10 +34,10 @@ else
     echo -e " ${YELLOW}(unknown, may not work)${NC}"
 fi
 
-# 3. Check disk space (need at least 500MB free)
+# 3. Check disk space (need at least 1000MB free for glibc environment)
 AVAILABLE_MB=$(df "$PREFIX" 2>/dev/null | awk 'NR==2 {print int($4/1024)}')
-if [ -n "$AVAILABLE_MB" ] && [ "$AVAILABLE_MB" -lt 500 ]; then
-    echo -e "${RED}[FAIL]${NC} Insufficient disk space: ${AVAILABLE_MB}MB available (need 500MB+)"
+if [ -n "$AVAILABLE_MB" ] && [ "$AVAILABLE_MB" -lt 1000 ]; then
+    echo -e "${RED}[FAIL]${NC} Insufficient disk space: ${AVAILABLE_MB}MB available (need 1000MB+)"
     ERRORS=$((ERRORS + 1))
 else
     echo -e "${GREEN}[OK]${NC}   Disk space: ${AVAILABLE_MB:-unknown}MB available"
@@ -60,7 +60,7 @@ if command -v node &>/dev/null; then
         echo -e "${YELLOW}[WARN]${NC} Node.js >= 22 required. Will be upgraded during install."
     fi
 else
-    echo -e "${YELLOW}[INFO]${NC} Node.js not found. Will be installed."
+    echo -e "${YELLOW}[INFO]${NC} Node.js not found. Will be installed via glibc environment."
 fi
 
 # 6. Check Phantom Process Killer (Android 12+, API 31+)

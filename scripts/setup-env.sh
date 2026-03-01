@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup-env.sh - Configure environment variables for OpenClaw in Termux
+# setup-env.sh - Configure environment variables for OpenClaw in Termux (glibc architecture)
 set -euo pipefail
 
 GREEN='\033[0;32m'
@@ -13,22 +13,18 @@ BASHRC="$HOME/.bashrc"
 MARKER_START="# >>> OpenClaw on Android >>>"
 MARKER_END="# <<< OpenClaw on Android <<<"
 
-COMPAT_PATH="$HOME/.openclaw-android/patches/bionic-compat.js"
-
-COMPAT_HEADER="$HOME/.openclaw-android/patches/termux-compat.h"
+GLIBC_NODE_DIR="$HOME/.openclaw-android/node"
+COMPAT_PATH="$HOME/.openclaw-android/patches/glibc-compat.js"
 
 ENV_BLOCK="${MARKER_START}
-export PATH=\"\$HOME/.local/bin:\$PATH\"
+export PATH=\"$GLIBC_NODE_DIR/bin:\$HOME/.local/bin:\$PATH\"
 export TMPDIR=\"\$PREFIX/tmp\"
 export TMP=\"\$TMPDIR\"
 export TEMP=\"\$TMPDIR\"
-export NODE_OPTIONS=\"-r $COMPAT_PATH\"
 export CONTAINER=1
-export CFLAGS=\"-Wno-error=implicit-function-declaration\"
-export CXXFLAGS=\"-include $COMPAT_HEADER\"
-export GYP_DEFINES=\"OS=linux android_ndk_path=\$PREFIX\"
-export CPATH=\"\$PREFIX/include/glib-2.0:\$PREFIX/lib/glib-2.0/include\"
 export CLAWDHUB_WORKDIR=\"\$HOME/.openclaw/workspace\"
+export CPATH=\"\$PREFIX/include/glib-2.0:\$PREFIX/lib/glib-2.0/include\"
+export OA_GLIBC=1
 ${MARKER_END}"
 
 # Create .bashrc if it doesn't exist
@@ -49,29 +45,30 @@ echo -e "${GREEN}[OK]${NC}   Added environment variables to $BASHRC"
 
 echo ""
 echo "Variables configured:"
-echo "  PATH=\$HOME/.local/bin:\$PATH"
+echo "  PATH=$GLIBC_NODE_DIR/bin:\$HOME/.local/bin:\$PATH"
 echo "  TMPDIR=\$PREFIX/tmp"
 echo "  TMP=\$TMPDIR"
 echo "  TEMP=\$TMPDIR"
-echo "  NODE_OPTIONS=\"-r $COMPAT_PATH\""
 echo "  CONTAINER=1  (suppresses systemd checks)"
-echo "  CFLAGS=\"-Wno-error=...\"  (Clang implicit-function-declaration fix)"
-echo "  CXXFLAGS=\"-include ...termux-compat.h\"  (native build fixes)"
-echo "  GYP_DEFINES=\"OS=linux ...\"  (node-gyp Android override)"
-echo "  CPATH=\"...glib-2.0...\"  (sharp header paths)"
 echo "  CLAWDHUB_WORKDIR=\"\$HOME/.openclaw/workspace\"  (clawhub skill install path)"
+echo "  CPATH=\"\$PREFIX/include/glib-2.0:\$PREFIX/lib/glib-2.0/include\"  (native module builds)"
+echo "  OA_GLIBC=1  (glibc architecture marker)"
+echo ""
+echo "Removed (no longer needed with glibc):"
+echo "  NODE_OPTIONS  (handled by node wrapper auto-loading glibc-compat.js)"
+echo "  CXXFLAGS      (glibc headers are complete)"
+echo "  GYP_DEFINES   (glibc is standard Linux)"
+echo "  CFLAGS        (glibc compiler is standard)"
 
 # Source for current session
+export PATH="$GLIBC_NODE_DIR/bin:$HOME/.local/bin:$PATH"
 export TMPDIR="$PREFIX/tmp"
 export TMP="$TMPDIR"
 export TEMP="$TMPDIR"
-export NODE_OPTIONS="-r $COMPAT_PATH"
 export CONTAINER=1
-export CFLAGS="-Wno-error=implicit-function-declaration"
-export CXXFLAGS="-include $COMPAT_HEADER"
-export GYP_DEFINES="OS=linux android_ndk_path=$PREFIX"
-export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
 export CLAWDHUB_WORKDIR="$HOME/.openclaw/workspace"
+export OA_GLIBC=1
+export CPATH="$PREFIX/include/glib-2.0:$PREFIX/lib/glib-2.0/include"
 
 # Create ar symlink if missing (Termux provides llvm-ar but not ar)
 if [ ! -e "$PREFIX/bin/ar" ] && [ -x "$PREFIX/bin/llvm-ar" ]; then
