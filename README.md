@@ -23,6 +23,60 @@ An Android phone is a great environment for running an OpenClaw server:
 
 The standard approach to running OpenClaw on Android requires installing proot-distro with Linux, adding 700MB-1GB of overhead. OpenClaw on Android eliminates this by installing a lightweight glibc runtime directly into Termux, letting you run OpenClaw without a full Linux distribution.
 
+**Standard approach**: Install a full Linux distribution on top of Termux.
+
+```mermaid
+block-beta
+  columns 1
+  block:kernel["Linux Kernel"]
+    columns 1
+    block:android["Android · Bionic libc · Google's lightweight C library"]
+      columns 1
+      block:termux["Termux"]
+        columns 1
+        block:proot["proot-distro · Debian / Ubuntu"]
+          columns 1
+          glibc["GNU glibc · Desktop Linux's C library"]
+          apps["Node.js → OpenClaw"]
+        end
+      end
+    end
+  end
+
+  style kernel fill:#f8f9fa,stroke:#868e96
+  style android fill:#fff9db,stroke:#f08c00
+  style termux fill:#e7f5ff,stroke:#1971c2
+  style proot fill:#ffe3e3,stroke:#e03131
+  style glibc fill:#fff,stroke:#ccc
+  style apps fill:#fff,stroke:#ccc
+```
+
+**This project**: No proot-distro — just the glibc dynamic linker.
+
+```mermaid
+block-beta
+  columns 1
+  block:kernel2["Linux Kernel · Same kernel"]
+    columns 1
+    block:android2["Android · Bionic libc"]
+      columns 1
+      block:termux2["Termux + glibc-runner"]
+        columns 1
+        ldso["glibc dynamic linker ld.so · Linker only"]
+        node2["ld.so → Node.js → OpenClaw"]
+        tools["OpenCode · code-server · git · python · make ..."]
+      end
+    end
+  end
+
+  style kernel2 fill:#f8f9fa,stroke:#868e96
+  style android2 fill:#fff9db,stroke:#f08c00
+  style termux2 fill:#d3f9d8,stroke:#2b8a3e
+  style ldso fill:#fff,stroke:#ccc
+  style node2 fill:#fff,stroke:#ccc
+  style tools fill:#fff,stroke:#ccc
+```
+
 | | Standard (proot-distro) | This project |
 |---|---|---|
 | Storage overhead | 1-2GB (Linux + packages) | ~200MB |
