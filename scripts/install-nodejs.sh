@@ -93,20 +93,15 @@ echo -e "${GREEN}[OK]${NC}   Extracted to $NODE_DIR"
 echo ""
 echo "Creating wrapper scripts (grun-style, no patchelf)..."
 
-# Move original node binary to node.real
-if [ -f "$NODE_DIR/bin/node" ] && [ ! -L "$NODE_DIR/bin/node" ]; then
-    mv "$NODE_DIR/bin/node" "$NODE_DIR/bin/node.real"
-fi
-
 # Create node wrapper script
-# This uses grun-style execution: ld.so directly loads the binary
-# LD_PRELOAD must be unset to prevent Bionic libtermux-exec.so from
-# being loaded into the glibc process (causes version mismatch crash)
-# glibc-compat.js is auto-loaded to fix Android kernel quirks (os.cpus() returns 0,
-# os.networkInterfaces() throws EACCES) that affect native module builds and runtime.
+echo "Creating robust node wrapper..."
+
 cat > "$NODE_DIR/bin/node" << 'WRAPPER'
 #!/usr/bin/env bash
+# Clear Bionic/Android variables to prevent crashes
 unset LD_PRELOAD
+unset LD_LIBRARY_PATH
+
 _OA_COMPAT="$HOME/.openclaw-android/patches/glibc-compat.js"
 if [ -f "$_OA_COMPAT" ]; then
     case "${NODE_OPTIONS:-}" in
@@ -114,6 +109,7 @@ if [ -f "$_OA_COMPAT" ]; then
         *) export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }-r $_OA_COMPAT" ;;
     esac
 fi
+
 # Fix leading options for glibc ld.so
 _LEADING_OPTS=""
 _COUNT=0
@@ -130,16 +126,24 @@ if [ $_COUNT -gt 0 ] && [ $_COUNT -lt $# ]; then
     export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }$_LEADING_OPTS"
 fi
 
-LDSO="$PREFIX/glibc/lib/ld-linux-aarch64.so.1"
-if [ ! -x "$LDSO" ]; then
-    echo "ERROR: glibc linker not found at $LDSO" >&2
+# Try grun first (official Termux-glibc runner), fallback to ld.so
+LDSO="@@LDSO_PATH@@"
+REAL_BINARY="$(dirname "$0")/node.real"
+
+if command -v grun &>/dev/null; then
+    exec grun "$REAL_BINARY" "$@"
+elif [ -x "$LDSO" ]; then
+    exec "$LDSO" "$REAL_BINARY" "$@"
+else
+    echo "ERROR: No glibc runner (grun or ld.so) found!" >&2
     exit 1
 fi
-
-exec "$LDSO" "$(dirname "$0")/node.real" "$@"
 WRAPPER
+
+sed -i "s|@@LDSO_PATH@@|$GLIBC_LDSO|g" "$NODE_DIR/bin/node"
 chmod +x "$NODE_DIR/bin/node"
-echo -e "${GREEN}[OK]${NC}   node wrapper created"
+chmod +x "$NODE_DIR/bin/node.real"
+echo -e "${GREEN}[OK]${NC}   Node wrapper updated with grun support"
 
 # npm is a JS script that uses the node from its own directory,
 # so it automatically inherits the wrapper. No additional wrapping needed.
