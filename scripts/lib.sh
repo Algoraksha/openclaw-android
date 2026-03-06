@@ -22,10 +22,17 @@ OA_VERSION="1.0.4"
 # ── Platform detection ──
 is_16kb() {
     local ps
+    # Robust page size check
     ps=$(getconf PAGESIZE 2>/dev/null || echo 4096)
-    if [ "$ps" -eq 16384 ]; then
-        return 0
-    fi
+    [ "$ps" -eq 16384 ] && return 0
+    
+    # Pixel 9/10 Force-Mode (since they are definitely 16KB or problematic)
+    local model
+    model=$(getprop ro.product.model 2>/dev/null || echo "unknown")
+    case "$model" in
+        "Pixel 9"*|"Pixel 10"*) return 0 ;;
+    esac
+    
     return 1
 }
 
