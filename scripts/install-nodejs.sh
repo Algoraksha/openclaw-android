@@ -13,12 +13,10 @@
 # All glibc binaries are executed via: exec ld.so binary "$@"
 set -euo pipefail
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-OPENCLAW_DIR="$HOME/.openclaw-android"
+# Source shared library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib.sh"
+OPENCLAW_DIR="$PROJECT_DIR"
 NODE_DIR="$OPENCLAW_DIR/node"
 GLIBC_LDSO="$PREFIX/glibc/lib/ld-linux-aarch64.so.1"
 
