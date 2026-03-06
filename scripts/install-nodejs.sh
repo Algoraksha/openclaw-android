@@ -105,7 +105,7 @@ fi
 # glibc-compat.js is auto-loaded to fix Android kernel quirks (os.cpus() returns 0,
 # os.networkInterfaces() throws EACCES) that affect native module builds and runtime.
 cat > "$NODE_DIR/bin/node" << 'WRAPPER'
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
 unset LD_PRELOAD
 _OA_COMPAT="$HOME/.openclaw-android/patches/glibc-compat.js"
 if [ -f "$_OA_COMPAT" ]; then
@@ -114,9 +114,7 @@ if [ -f "$_OA_COMPAT" ]; then
         *) export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }-r $_OA_COMPAT" ;;
     esac
 fi
-# glibc ld.so misparses leading --options as its own flags.
-# Move them to NODE_OPTIONS ONLY when a script path follows
-# (preserves direct invocations like 'node --version').
+# Fix leading options for glibc ld.so
 _LEADING_OPTS=""
 _COUNT=0
 for _arg in "$@"; do
@@ -131,7 +129,14 @@ if [ $_COUNT -gt 0 ] && [ $_COUNT -lt $# ]; then
     done
     export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }$_LEADING_OPTS"
 fi
-exec "$PREFIX/glibc/lib/ld-linux-aarch64.so.1" "$(dirname "$0")/node.real" "$@"
+
+LDSO="$PREFIX/glibc/lib/ld-linux-aarch64.so.1"
+if [ ! -x "$LDSO" ]; then
+    echo "ERROR: glibc linker not found at $LDSO" >&2
+    exit 1
+fi
+
+exec "$LDSO" "$(dirname "$0")/node.real" "$@"
 WRAPPER
 chmod +x "$NODE_DIR/bin/node"
 echo -e "${GREEN}[OK]${NC}   node wrapper created"
