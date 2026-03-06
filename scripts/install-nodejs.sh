@@ -62,31 +62,34 @@ if [ -x "$NODE_DIR/bin/node" ]; then
     fi
 fi
 
-# ── Step 1: Download Node.js linux-arm64 ──────
+# ── Step 1: Install Node.js ───────────────────
 
-echo "Downloading Node.js v${NODE_VERSION} (linux-arm64)..."
-echo "  (File size ~25MB — may take a few minutes depending on network speed)"
-mkdir -p "$NODE_DIR"
-
-TMP_DIR=$(mktemp -d "$PREFIX/tmp/node-install.XXXXXX") || {
-    echo -e "${RED}[FAIL]${NC} Failed to create temp directory"
-    exit 1
-}
-trap 'rm -rf "$TMP_DIR"' EXIT
-
-if ! curl -fL --max-time 300 "$NODE_URL" -o "$TMP_DIR/$NODE_TARBALL"; then
-    echo -e "${RED}[FAIL]${NC} Failed to download Node.js v${NODE_VERSION}"
-    exit 1
+DOWNLOAD_REQUIRED=true
+echo "Attempting to install Node.js via pacman (for 16KB alignment support)..."
+if pacman -Sy nodejs --noconfirm --assume-installed bash,patchelf,resolv-conf 2>&1; then
+    echo -e "${GREEN}[OK]${NC}   Node.js installed via pacman"
+    GLIBC_BIN_DIR="$PREFIX/glibc/usr/bin"
+    if [ -f "$GLIBC_BIN_DIR/node" ]; then
+        mkdir -p "$NODE_DIR/bin"
+        cp "$GLIBC_BIN_DIR/node" "$NODE_DIR/bin/node.real"
+        echo -e "${GREEN}[OK]${NC}   Targeted pacman node binary"
+        DOWNLOAD_REQUIRED=false
+    fi
 fi
-echo -e "${GREEN}[OK]${NC}   Downloaded $NODE_TARBALL"
 
-# Extract
-echo "Extracting Node.js... (this may take a moment)"
-if ! tar -xJf "$TMP_DIR/$NODE_TARBALL" -C "$NODE_DIR" --strip-components=1; then
-    echo -e "${RED}[FAIL]${NC} Failed to extract Node.js"
-    exit 1
+if [ "$DOWNLOAD_REQUIRED" = true ]; then
+    echo "Downloading Node.js v${NODE_VERSION} (linux-arm64)..."
+    echo "  (File size ~25MB — may take a few minutes depending on network speed)"
+    mkdir -p "$NODE_DIR"
+    TMP_DIR=$(mktemp -d "$PREFIX/tmp/node-install.XXXXXX")
+    trap 'rm -rf "$TMP_DIR"' EXIT
+    if ! curl -fL --max-time 300 "$NODE_URL" -o "$TMP_DIR/$NODE_TARBALL"; then
+        echo -e "${RED}[FAIL]${NC} Failed to download Node.js"
+        exit 1
+    fi
+    tar -xJf "$TMP_DIR/$NODE_TARBALL" -C "$NODE_DIR" --strip-components=1
+    mv "$NODE_DIR/bin/node" "$NODE_DIR/bin/node.real"
 fi
-echo -e "${GREEN}[OK]${NC}   Extracted to $NODE_DIR"
 
 # ── Step 2: Create wrapper scripts ────────────
 
