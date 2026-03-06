@@ -164,25 +164,40 @@ echo "Verifying glibc Node.js..."
 echo "Files in $NODE_DIR/bin/:"
 ls -l "$NODE_DIR/bin/"
 
-echo "Direct binary check (node.real):"
-file "$NODE_DIR/bin/node.real" || echo "file command not found"
+echo "Architecture check:"
+echo "  System: $(uname -m)"
+echo "  Node Binary Info:"
+# Check if readelf or file is available for more info
+if command -v readelf &>/dev/null; then
+    readelf -h "$NODE_DIR/bin/node.real" | grep -E 'Class|Machine' || echo "  (readelf failed)"
+elif command -v file &>/dev/null; then
+    file "$NODE_DIR/bin/node.real" || echo "  (file failed)"
+else
+    echo "  (No readelf/file command to check binary info)"
+fi
+
+echo "Linker check:"
+if [ -x "$GLIBC_LDSO" ]; then
+    echo -e "  ${GREEN}[OK]${NC} Linker exists: $GLIBC_LDSO"
+else
+    echo -e "  ${RED}[FAIL]${NC} Linker NOT FOUND or NOT EXECUTABLE at $GLIBC_LDSO"
+fi
 
 echo "Attempting to run node wrapper..."
-# Remove 2>/dev/null to see the actual error (Segfault, Permission denied, etc.)
+# Run with explicit error output
 if ! "$NODE_DIR/bin/node" --version; then
     echo ""
     echo -e "${RED}[FAIL]${NC} Node.js verification failed."
-    # Detect Exec format error (typical for 32/64 bit mismatch)
-    if "$NODE_DIR/bin/node" --version 2>&1 | grep -q "Exec format error"; then
+    # Specific check for common failures
+    _ERR=$("$NODE_DIR/bin/node" --version 2>&1 || true)
+    if echo "$_ERR" | grep -q "Exec format error"; then
         echo "--------------------------------------------------------"
-        echo -e "${RED}ARCHITECTURE MISMATCH DETECTED!${NC}"
-        echo "Your device is likely 32-bit (armv7l), but we are trying"
-        echo "to run 64-bit (aarch64) binaries. OpenClaw for SVS"
-        echo "requires a 64-bit system/userland."
+        echo -e "${RED}ARCHITECTURE MISMATCH!${NC}"
+        echo "The binary is likely 64-bit but you are on a 32-bit"
+        echo "userland/system. Use 'uname -a' to check."
         echo "--------------------------------------------------------"
-    else
-        echo "This usually happens if the glibc environment is incomplete,"
-        echo "a library is missing, or the device architecture is incompatible."
+    elif echo "$_ERR" | grep -q "No such file or directory"; then
+        echo "Possible missing shared library or broken linker path."
     fi
     exit 1
 fi
