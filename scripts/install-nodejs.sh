@@ -22,8 +22,8 @@ OPENCLAW_DIR="$HOME/.openclaw-android"
 NODE_DIR="$OPENCLAW_DIR/node"
 GLIBC_LDSO="$PREFIX/glibc/lib/ld-linux-aarch64.so.1"
 
-# Node.js LTS version to install
-NODE_VERSION="22.22.0"
+# Node.js LTS version to install (22.x LTS)
+NODE_VERSION="22.14.0"
 NODE_TARBALL="node-v${NODE_VERSION}-linux-arm64.tar.xz"
 NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TARBALL}"
 
@@ -172,8 +172,18 @@ echo "Attempting to run node wrapper..."
 if ! "$NODE_DIR/bin/node" --version; then
     echo ""
     echo -e "${RED}[FAIL]${NC} Node.js verification failed."
-    echo "This usually happens if the glibc environment is incomplete"
-    echo "or the device architecture is incompatible."
+    # Detect Exec format error (typical for 32/64 bit mismatch)
+    if "$NODE_DIR/bin/node" --version 2>&1 | grep -q "Exec format error"; then
+        echo "--------------------------------------------------------"
+        echo -e "${RED}ARCHITECTURE MISMATCH DETECTED!${NC}"
+        echo "Your device is likely 32-bit (armv7l), but we are trying"
+        echo "to run 64-bit (aarch64) binaries. OpenClaw for SVS"
+        echo "requires a 64-bit system/userland."
+        echo "--------------------------------------------------------"
+    else
+        echo "This usually happens if the glibc environment is incomplete,"
+        echo "a library is missing, or the device architecture is incompatible."
+    fi
     exit 1
 fi
 
