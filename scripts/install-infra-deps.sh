@@ -19,8 +19,8 @@ pkg update -y
 pkg upgrade -y
 
 # Install core infrastructure packages
-echo "Installing git..."
-pkg install -y git
+echo "Installing git and xz-utils..."
+pkg install -y git xz-utils
 
 echo ""
 echo -e "${GREEN}Infrastructure dependencies installed.${NC}"

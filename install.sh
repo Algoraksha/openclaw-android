@@ -79,10 +79,10 @@ bash "$SCRIPT_DIR/scripts/install-infra-deps.sh"
 bash "$SCRIPT_DIR/scripts/setup-paths.sh"
 
 step 5 "Platform Runtime Dependencies (L2)"
-[ "${PLATFORM_NEEDS_GLIBC:-false}" = true ] && bash "$SCRIPT_DIR/scripts/install-glibc.sh" || true
-[ "${PLATFORM_NEEDS_NODEJS:-false}" = true ] && bash "$SCRIPT_DIR/scripts/install-nodejs.sh" || true
-[ "${PLATFORM_NEEDS_BUILD_TOOLS:-false}" = true ] && bash "$SCRIPT_DIR/scripts/install-build-tools.sh" || true
-[ "${PLATFORM_NEEDS_PROOT:-false}" = true ] && pkg install -y proot || true
+[ "${PLATFORM_NEEDS_GLIBC:-false}" = true ] && bash "$SCRIPT_DIR/scripts/install-glibc.sh"
+[ "${PLATFORM_NEEDS_NODEJS:-false}" = true ] && bash "$SCRIPT_DIR/scripts/install-nodejs.sh"
+[ "${PLATFORM_NEEDS_BUILD_TOOLS:-false}" = true ] && bash "$SCRIPT_DIR/scripts/install-build-tools.sh"
+[ "${PLATFORM_NEEDS_PROOT:-false}" = true ] && pkg install -y proot
 
 # Source environment for current session (needed by platform install)
 GLIBC_NODE_DIR="$PROJECT_DIR/node"
