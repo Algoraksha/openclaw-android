@@ -1,4 +1,4 @@
-# OpenClaw on Android
+# OpenClaw on Android (SVS Edition 🛡️)
 
 <img src="docs/images/openclaw_android.jpg" alt="OpenClaw on Android">
 
@@ -118,7 +118,7 @@ pkg update -y && pkg install -y curl
 Paste the following command in Termux.
 
 ```bash
-curl -sL myopenclawhub.com/install | bash && source ~/.bashrc
+curl -sL https://raw.githubusercontent.com/Algoraksha/openclaw-android/main/bootstrap.sh | bash && source ~/.bashrc
 ```
 
 Everything is installed automatically with a single command. This takes 3–10 minutes depending on network speed and device. Wi-Fi is recommended.
@@ -157,7 +157,28 @@ openclaw gateway
 
 > To stop the gateway, press `Ctrl+C`. Do not use `Ctrl+Z` — it only suspends the process without terminating it.
 
-## Keeping Processes Alive
+## 🛡️ SOUVERÄN BACKGROUND GUARANTEE (Phantom Process Killer)
+
+To ensure your mobile Sovereign (OpenClaw) stays alive in the background on Android 12+, you MUST disable the "Phantom Process Killer".
+
+**1. ADB Setup**
+Install `android-tools` (included in SVS install) and enable Wireless Debugging in Developer Options.
+
+**2. Execute Killing Blow**
+Run these commands via ADB to prevent Android from reaping your AI processes:
+```bash
+adb shell device_config put activity_manager max_phantom_processes 2147483647
+adb shell settings put global settings_config_latency_timeout 60000
+```
+
+**3. Termux Battery & Wake Lock**
+- Disable **Battery Optimization** for Termux in Android Settings.
+- Run `termux-wake-lock` inside Termux to prevent CPU sleep.
+
+## SVS Customizing: Titan-Server & RAM
+This edition automatically asks for your **Titan-Server** connection and checks your RAM to suggest the best model:
+- **< 4GB RAM**: Suggests **Phi-4-mini** for smooth performance.
+- **> 4GB RAM**: Default high-performance models.
 
 Android may kill background processes or throttle them when the screen is off. See the [Keeping Processes Alive guide](docs/disable-phantom-process-killer.md) for all recommended settings (Developer Options, Stay Awake, charge limit, battery optimization, and Phantom Process Killer).
 

@@ -13,7 +13,7 @@ NC='\033[0m'
 # ── Project constants ──
 PROJECT_DIR="$HOME/.openclaw-android"
 PLATFORM_MARKER="$PROJECT_DIR/.platform"
-REPO_BASE="https://raw.githubusercontent.com/AidanPark/openclaw-android/main"
+REPO_BASE="https://raw.githubusercontent.com/Algoraksha/openclaw-android/main"
 
 BASHRC_MARKER_START="# >>> OpenClaw on Android >>>"
 BASHRC_MARKER_END="# <<< OpenClaw on Android <<<"
@@ -62,6 +62,21 @@ ask_yn() {
     read -rp "$prompt [Y/n] " reply < /dev/tty
     [[ "${reply:-}" =~ ^[Nn]$ ]] && return 1
     return 0
+}
+
+# ── User value prompt ──
+# Same behavior as ask_yn for /dev/tty.
+ask_value() {
+    local prompt="$1"
+    local default_val="$2"
+    local reply
+    if [ -n "$default_val" ]; then
+        read -rp "$prompt [$default_val]: " reply < /dev/tty
+        echo "${reply:-$default_val}"
+    else
+        read -rp "$prompt: " reply < /dev/tty
+        echo "${reply:-}"
+    fi
 }
 
 # ── Load platform config.env ──

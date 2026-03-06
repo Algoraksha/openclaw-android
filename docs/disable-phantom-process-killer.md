@@ -95,7 +95,7 @@ pkg install -y android-tools
 
 <img src="images/signal9/05-pairing-code-dialog.png" width="300" alt="Pairing code dialog">
 
-3. In Termux, run the pairing command using the port and code shown on screen:
+1. In Termux, run the pairing command using the port and code shown on screen:
 
 ```bash
 adb pair localhost:<PAIRING_PORT> <PAIRING_CODE>
@@ -133,21 +133,28 @@ You should see `connected to localhost:35541`.
 
 > The pairing port and connection port are different. Use the port shown on the Wireless debugging main screen for `adb connect`.
 
-## Step 6: Disable Phantom Process Killer
+## Step 6: Disable Phantom Process Killer (SVS Edition 🛡️)
 
-Now run the following command to disable Phantom Process Killer:
+Now run the following commands to fully neutralize the Phantom Process Killer and increase the process limit:
 
 ```bash
+# Increase phantom process limit to maximum
+adb shell "device_config put activity_manager max_phantom_processes 2147483647"
+
+# Increase timeout to prevent aggressive kills
+adb shell "settings put global settings_config_latency_timeout 60000"
+
+# Optional: Disable the monitor entirely (Android 12)
 adb shell "settings put global settings_enable_monitor_phantom_procs false"
 ```
 
 Verify the setting:
 
 ```bash
-adb shell "settings get global settings_enable_monitor_phantom_procs"
+adb shell "device_config get activity_manager max_phantom_processes"
 ```
 
-If the output is `false`, Phantom Process Killer has been successfully disabled.
+If the output is `2147483647`, your mobile Sovereign is now protected from the Android Reaper.
 
 <img src="images/signal9/08-adb-disable-ppk-done.png" width="600" alt="Phantom Process Killer disabled">
 

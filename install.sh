@@ -30,6 +30,29 @@ SELECTED_PLATFORM="openclaw"
 echo -e "${GREEN}[OK]${NC}   Platform: OpenClaw"
 load_platform_config "$SELECTED_PLATFORM" "$SCRIPT_DIR"
 
+step 2.5 "SVS Customizing (Titan-Server & Models)"
+echo "----------------------------------------"
+mkdir -p "$PROJECT_DIR"
+SVS_CONFIG="$PROJECT_DIR/svs_config.env"
+
+# RAM Check
+TOTAL_RAM_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}' || echo 0)
+if [ "$TOTAL_RAM_KB" -gt 0 ] && [ "$TOTAL_RAM_KB" -lt 4000000 ]; then
+    echo -e "${YELLOW}[RAM]${NC}   Low RAM detected ($((TOTAL_RAM_KB/1024)) MB)."
+    echo -e "         Based on SVS guidelines, recommending ${BOLD}Phi-4-mini${NC}."
+    SUGGESTED_MODEL="phi-4-mini"
+else
+    echo -e "${GREEN}[RAM]${NC}   RAM: $((TOTAL_RAM_KB/1024)) MB (Recommended: default)."
+    SUGGESTED_MODEL="default"
+fi
+
+# Titan-Server connection
+TITAN_SERVER=$(ask_value "Enter connection to Alexander's Titan-Server (Laufwerk D:)" "192.168.1.100")
+echo "TITAN_SERVER=\"$TITAN_SERVER\"" > "$SVS_CONFIG"
+echo "SUGGESTED_MODEL=\"$SUGGESTED_MODEL\"" >> "$SVS_CONFIG"
+echo -e "${GREEN}[OK]${NC}   Titan-Server configured: $TITAN_SERVER"
+echo -e "${GREEN}[OK]${NC}   Suggested Model: $SUGGESTED_MODEL"
+
 step 3 "Optional Tools Selection (L3)"
 INSTALL_TMUX=false
 INSTALL_TTYD=false
@@ -126,4 +149,18 @@ echo -e "  $PLATFORM_NAME $($PLATFORM_VERSION_CMD 2>/dev/null || echo '')"
 echo ""
 echo "Next step:"
 echo "  $PLATFORM_POST_INSTALL_MSG"
+echo ""
+echo -e "${BOLD}🛡️ SOUVERÄN BACKGROUND GUARANTEE (Phantom Process Killer) 🛡️${NC}"
+echo "--------------------------------------------------------"
+echo "To prevent Android from killing your background AI (OpenClaw):"
+echo "1. Enable Developer Options & USB/Wireless Debugging."
+echo "2. Run these commands via ADB (from PC or Termux with android-tools):"
+echo "   adb shell device_config put activity_manager max_phantom_processes 2147483647"
+echo "   adb shell settings put global settings_config_latency_timeout 60000"
+echo "3. Run 'termux-wake-lock' in your terminal."
+echo "4. Disable battery optimization for Termux."
+echo ""
+echo "Titan-Server connected to: $TITAN_SERVER"
+echo "Recommended AI Model: $SUGGESTED_MODEL"
+echo "--------------------------------------------------------"
 echo ""
