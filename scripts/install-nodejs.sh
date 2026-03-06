@@ -161,22 +161,30 @@ echo -e "${GREEN}[OK]${NC}   npm script-shell set to $PREFIX/bin/sh"
 
 echo ""
 echo "Verifying glibc Node.js..."
+echo "Files in $NODE_DIR/bin/:"
+ls -l "$NODE_DIR/bin/"
 
-NODE_VER=$("$NODE_DIR/bin/node" --version 2>/dev/null) || {
-    echo -e "${RED}[FAIL]${NC} Node.js verification failed — wrapper script may be broken"
+echo "Direct binary check (node.real):"
+file "$NODE_DIR/bin/node.real" || echo "file command not found"
+
+echo "Attempting to run node wrapper..."
+# Remove 2>/dev/null to see the actual error (Segfault, Permission denied, etc.)
+if ! "$NODE_DIR/bin/node" --version; then
+    echo ""
+    echo -e "${RED}[FAIL]${NC} Node.js verification failed."
+    echo "This usually happens if the glibc environment is incomplete"
+    echo "or the device architecture is incompatible."
     exit 1
-}
-echo -e "${GREEN}[OK]${NC}   Node.js $NODE_VER (glibc, grun wrapper)"
-
-NPM_VER=$("$NODE_DIR/bin/npm" --version 2>/dev/null) || {
-    echo -e "${YELLOW}[WARN]${NC} npm verification failed"
-}
-if [ -n "${NPM_VER:-}" ]; then
-    echo -e "${GREEN}[OK]${NC}   npm $NPM_VER"
 fi
 
+NODE_VER=$("$NODE_DIR/bin/node" --version)
+echo -e "${GREEN}[OK]${NC}   Node.js $NODE_VER (glibc, grun wrapper)"
+
+NPM_VER=$("$NODE_DIR/bin/npm" --version 2>/dev/null || echo "unknown")
+echo -e "${GREEN}[OK]${NC}   npm $NPM_VER"
+
 # Quick platform check
-PLATFORM=$("$NODE_DIR/bin/node" -e "console.log(process.platform)" 2>/dev/null) || true
+PLATFORM=$("$NODE_DIR/bin/node" -e "console.log(process.platform)" 2>/dev/null || echo "unknown")
 if [ "$PLATFORM" = "linux" ]; then
     echo -e "${GREEN}[OK]${NC}   platform: linux (correct)"
 else
