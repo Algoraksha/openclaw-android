@@ -20,6 +20,15 @@ BASHRC_MARKER_END="# <<< OpenClaw on Android <<<"
 OA_VERSION="1.0.4"
 
 # ── Platform detection ──
+is_16kb() {
+    local ps
+    ps=$(getconf PAGESIZE 2>/dev/null || echo 4096)
+    if [ "$ps" -eq 16384 ]; then
+        return 0
+    fi
+    return 1
+}
+
 # 1. Explicit marker file (new install and after first update)
 # 2. Legacy detection (v1.0.2 and below, one-time)
 # 3. Detection failure

@@ -37,7 +37,34 @@ if [ -z "${PREFIX:-}" ]; then
     exit 1
 fi
 
+# Detect 16KB page size (Pixel 9/10, Android 15+)
+if is_16kb; then
+    echo -e "${YELLOW}[INFO]${NC} 16KB Page Size detected (Pixel 10/Android 15+)"
+    echo "       Switching to Bionic Native Mode (Skip glibc Node.js)"
+    
+    # Check if native nodejs is installed
+    if ! command -v node &>/dev/null; then
+        echo "Installing native Termux Node.js (16KB aligned)..."
+        pkg install -y nodejs
+    fi
+    
+    NODE_VER=$(node --version)
+    echo -e "${GREEN}[OK]${NC}   Using native Node.js $NODE_VER"
+    
+    # Create a simple symlink to satisfy standard paths
+    mkdir -p "$NODE_DIR/bin"
+    ln -sf "$(which node)" "$NODE_DIR/bin/node"
+    ln -sf "$(which npm)" "$NODE_DIR/bin/npm"
+    ln -sf "$(which npx)" "$NODE_DIR/bin/npx"
+    
+    echo ""
+    echo -e "${GREEN}Node.js configured for 16KB environment.${NC}"
+    exit 0
+fi
+
 if [ ! -x "$GLIBC_LDSO" ]; then
+    # Some older platforms don't need glibc node but still need glibc runtime
+    # However for 16kb we skip glibc node completely.
     echo -e "${RED}[FAIL]${NC} glibc dynamic linker not found — run install-glibc.sh first"
     exit 1
 fi
