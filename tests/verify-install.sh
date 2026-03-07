@@ -79,10 +79,18 @@ else
 fi
 
 NODE_WRAPPER="$PROJECT_DIR/node/bin/node"
-if [ -f "$NODE_WRAPPER" ] && head -1 "$NODE_WRAPPER" 2>/dev/null | grep -q "bash"; then
-    check_pass "glibc node wrapper script"
+if is_16kb; then
+    if [ -L "$NODE_WRAPPER" ]; then
+        check_pass "Node.js symbolic link (16KB native mode)"
+    else
+        check_fail "Node.js symlink not found for 16KB environment"
+    fi
 else
-    check_fail "glibc node wrapper not found or not a wrapper script"
+    if [ -f "$NODE_WRAPPER" ] && head -1 "$NODE_WRAPPER" 2>/dev/null | grep -q "bash"; then
+        check_pass "glibc node wrapper script"
+    else
+        check_fail "glibc node wrapper not found or not a wrapper script"
+    fi
 fi
 
 for DIR in "$PROJECT_DIR" "$PREFIX/tmp"; do
